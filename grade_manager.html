@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grade Manager</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #ffffff;
+      --surface:      #f5f5f7;
+      --border:       #e0e0e5;
+      --text-primary: #1d1d1f;
+      --text-muted:   #6e6e73;
+      --accent:       #0071e3;
+      --accent-dark:  #0064cc;
+      --danger:       #ff3b30;
+      --pass-bg:      #d1fae5;
+      --pass-text:    #065f46;
+      --fail-bg:      #fee2e2;
+      --fail-text:    #991b1b;
+      --radius:       12px;
+      --ease:         0.2s ease;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container { max-width: 660px; margin: 0 auto; padding: 72px 24px 96px; }
+
+    header { margin-bottom: 52px; }
+
+    h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.5px; line-height: 1.1; }
+
+    .subtitle { font-size: 0.875rem; color: var(--text-muted); margin-top: 6px; }
+
+    h2 { font-size: 0.95rem; font-weight: 600; }
+
+    .card { background: var(--surface); border-radius: var(--radius); padding: 28px; }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 12px; }
+
+    .field { display: flex; flex-direction: column; gap: 7px; }
+
+    label {
+      font-size: 0.72rem; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+
+    .label-hint { font-weight: 400; text-transform: none; letter-spacing: 0; }
+
+    input[type="text"], input[type="number"] {
+      border: 1.5px solid var(--border); border-radius: 8px; padding: 11px 14px;
+      font-size: 0.9375rem; color: var(--text-primary); background: var(--bg);
+      outline: none; font-family: inherit; transition: border-color var(--ease);
+      -moz-appearance: textfield;
+    }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input:focus    { border-color: var(--accent); }
+    input.is-error { border-color: var(--danger); }
+
+    .error-msg { font-size: 0.8125rem; color: var(--danger); min-height: 20px; margin-bottom: 14px; }
+
+    .btn-primary {
+      background: var(--accent); color: #fff; border: none; border-radius: 8px;
+      padding: 12px 20px; font-size: 0.875rem; font-weight: 600; cursor: pointer;
+      font-family: inherit; transition: background var(--ease), transform var(--ease);
+    }
+    .btn-primary:hover  { background: var(--accent-dark); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-primary.full-width { width: 100%; margin-top: 20px; }
+
+    .btn-ghost {
+      background: transparent; border: none; font-size: 0.8125rem; font-weight: 500;
+      cursor: pointer; font-family: inherit; padding: 4px 0; transition: opacity var(--ease);
+    }
+    .btn-ghost.danger { color: var(--danger); }
+    .btn-ghost:hover  { opacity: 0.7; }
+
+    #listSection { margin-top: 40px; }
+
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+
+    .badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--accent); color: #fff; font-size: 0.7rem; font-weight: 700;
+      border-radius: 999px; padding: 2px 8px; margin-left: 8px; vertical-align: middle;
+    }
+
+    .student-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+
+    .student-item {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface); border-radius: 8px; padding: 14px 18px;
+    }
+    .student-item .s-name { flex: 1; font-size: 0.9rem; font-weight: 500; }
+    .student-item .s-mark { font-size: 0.9rem; color: var(--text-muted); min-width: 36px; text-align: right; }
+
+    .remove-btn {
+      background: none; border: none; cursor: pointer; color: var(--text-muted);
+      font-size: 1rem; line-height: 1; padding: 4px 6px; border-radius: 4px;
+      transition: color var(--ease); font-family: inherit;
+    }
+    .remove-btn:hover { color: var(--danger); }
+
+    #resultsSection { margin-top: 48px; }
+    #resultsSection h2 { margin-bottom: 20px; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 28px; }
+
+    .stat-card {
+      background: var(--surface); border-radius: var(--radius); padding: 20px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .stat-label {
+      font-size: 0.7rem; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .stat-value { font-size: 1.625rem; font-weight: 700; letter-spacing: -0.5px; }
+
+    .table-wrap {
+      border: 1.5px solid var(--border); border-radius: var(--radius);
+      overflow: hidden; overflow-x: auto;
+    }
+    .results-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    .results-table thead { background: var(--surface); }
+    .results-table th {
+      padding: 12px 18px; text-align: left; font-size: 0.7rem; font-weight: 600;
+      color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;
+      border-bottom: 1.5px solid var(--border);
+    }
+    .results-table td { padding: 14px 18px; border-bottom: 1px solid var(--border); }
+    .results-table tbody tr:last-child td { border-bottom: none; }
+
+    .grade { font-weight: 700; font-size: 0.9rem; }
+
+    .status { display: inline-block; font-size: 0.72rem; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
+    .status.pass { background: var(--pass-bg); color: var(--pass-text); }
+    .status.fail { background: var(--fail-bg); color: var(--fail-text); }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 480px) {
+      .container  { padding: 48px 16px 72px; }
+      .field-row  { grid-template-columns: 1fr; }
+      .stats-row  { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <header>
+      <h1>Grade Manager</h1>
+      <p class="subtitle">Student Grade Management System</p>
+    </header>
+
+    <main>
+
+      <section class="card">
+        <div class="field-row">
+          <div class="field">
+            <label for="studentName">Student Name</label>
+            <input id="studentName" type="text" placeholder="e.g. Jane Smith" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="studentMark">Mark <span class="label-hint">0 - 100</span></label>
+            <input id="studentMark" type="number" placeholder="85" min="0" max="100" step="0.1" />
+          </div>
+        </div>
+        <p class="error-msg" id="errorMsg" role="alert"></p>
+        <button id="addBtn" class="btn-primary">Add Student</button>
+      </section>
+
+      <section id="listSection" class="hidden">
+        <div class="section-header">
+          <h2>Students <span class="badge" id="studentCount">0</span></h2>
+          <button id="clearBtn" class="btn-ghost danger">Clear All</button>
+        </div>
+        <ul class="student-list" id="studentList" aria-live="polite"></ul>
+        <button id="calcBtn" class="btn-primary full-width">Calculate Results</button>
+      </section>
+
+      <section id="resultsSection" class="hidden">
+        <h2>Results</h2>
+        <div class="stats-row">
+          <div class="stat-card">
+            <span class="stat-label">Average</span>
+            <span class="stat-value" id="avgValue">--</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Highest</span>
+            <span class="stat-value" id="highValue">--</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Lowest</span>
+            <span class="stat-value" id="lowValue">--</span>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Mark</th>
+                <th>Grade</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="resultsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script>
+    "use strict";
+
+    const students = [];
+
+    const nameInput      = document.getElementById("studentName");
+    const markInput      = document.getElementById("studentMark");
+    const addBtn         = document.getElementById("addBtn");
+    const errorMsg       = document.getElementById("errorMsg");
+    const listSection    = document.getElementById("listSection");
+    const studentList    = document.getElementById("studentList");
+    const studentCount   = document.getElementById("studentCount");
+    const calcBtn        = document.getElementById("calcBtn");
+    const clearBtn       = document.getElementById("clearBtn");
+    const resultsSection = document.getElementById("resultsSection");
+    const avgValue       = document.getElementById("avgValue");
+    const highValue      = document.getElementById("highValue");
+    const lowValue       = document.getElementById("lowValue");
+    const resultsBody    = document.getElementById("resultsBody");
+
+    function getLetterGrade(mark) {
+      if (mark >= 90) return "A";
+      if (mark >= 80) return "B";
+      if (mark >= 70) return "C";
+      if (mark >= 60) return "D";
+      return "F";
+    }
+
+    function isPassing(mark) { return mark >= 50; }
+
+    function escapeHTML(str) {
+      const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+      return str.replace(/[&<>"']/g, c => map[c]);
+    }
+
+    function setError(msg) { errorMsg.textContent = msg; }
+
+    function clearError() {
+      errorMsg.textContent = "";
+      nameInput.classList.remove("is-error");
+      markInput.classList.remove("is-error");
+    }
+
+    function validate() {
+      const name = nameInput.value.trim();
+      const raw  = markInput.value.trim();
+
+      if (!name) {
+        setError("Student name is required.");
+        nameInput.classList.add("is-error");
+        nameInput.focus();
+        return null;
+      }
+      if (raw === "") {
+        setError("Mark is required.");
+        markInput.classList.add("is-error");
+        markInput.focus();
+        return null;
+      }
+      const mark = parseFloat(raw);
+      if (isNaN(mark) || mark < 0 || mark > 100) {
+        setError("Mark must be a number between 0 and 100.");
+        markInput.classList.add("is-error");
+        markInput.focus();
+        return null;
+      }
+      return { name, mark: Math.round(mark * 10) / 10 };
+    }
+
+    function renderList() {
+      studentList.innerHTML = "";
+      students.forEach((s, i) => {
+        const li = document.createElement("li");
+        li.className = "student-item";
+        li.innerHTML = `
+          <span class="s-name">${escapeHTML(s.name)}</span>
+          <span class="s-mark">${s.mark}</span>
+          <button class="remove-btn" data-index="${i}" aria-label="Remove ${escapeHTML(s.name)}">&times;</button>
+        `;
+        studentList.appendChild(li);
+      });
+      studentCount.textContent = students.length;
+      listSection.classList.toggle("hidden", students.length === 0);
+      resultsSection.classList.add("hidden");
+    }
+
+    function handleAdd() {
+      clearError();
+      const result = validate();
+      if (!result) return;
+      students.push(result);
+      nameInput.value = "";
+      markInput.value = "";
+      nameInput.focus();
+      renderList();
+    }
+
+    addBtn.addEventListener("click", handleAdd);
+    [nameInput, markInput].forEach(el => {
+      el.addEventListener("keydown", e => { if (e.key === "Enter") handleAdd(); });
+    });
+
+    studentList.addEventListener("click", e => {
+      const btn = e.target.closest(".remove-btn");
+      if (!btn) return;
+      students.splice(parseInt(btn.dataset.index, 10), 1);
+      renderList();
+    });
+
+    clearBtn.addEventListener("click", () => { students.length = 0; renderList(); });
+
+    calcBtn.addEventListener("click", () => {
+      if (students.length === 0) return;
+      const marks = students.map(s => s.mark);
+      const avg   = marks.reduce((a, b) => a + b, 0) / marks.length;
+      avgValue.textContent  = avg.toFixed(1);
+      highValue.textContent = Math.max(...marks);
+      lowValue.textContent  = Math.min(...marks);
+      resultsBody.innerHTML = "";
+      students.forEach(s => {
+        const tr = document.createElement("tr");
+        const passing = isPassing(s.mark);
+        tr.innerHTML = `
+          <td>${escapeHTML(s.name)}</td>
+          <td>${s.mark}</td>
+          <td><span class="grade">${getLetterGrade(s.mark)}</span></td>
+          <td><span class="status ${passing ? "pass" : "fail"}">${passing ? "Pass" : "Fail"}</span></td>
+        `;
+        resultsBody.appendChild(tr);
+      });
+      resultsSection.classList.remove("hidden");
+      resultsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  </script>
+</body>
+</html>
